@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = "--description" ]; then
+    echo "Show network addresses"
+    exit 0
+fi
+
 echo "Network addresses"
 echo
 

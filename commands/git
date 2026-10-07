@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = "--description" ]; then
+    echo "Commit and push repository changes"
+    exit 0
+fi
+
 set -e
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then

@@ -1,3 +1,8 @@
 #!/bin/bash
 
+if [ "$1" = "--description" ]; then
+    echo "Test Pine"
+    exit 0
+fi
+
 echo "hello from Pine"

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+if [ "$1" = "--description" ]; then
+    echo "Back up important home folders"
+    exit 0
+fi
+
 set -euo pipefail
 
 BACKUP_UUID="940720d3-869c-496e-b608-37f4e32870e5"
