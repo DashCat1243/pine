@@ -1,0 +1,30 @@
+#!/bin/bash
+
+echo "Network addresses"
+echo
+
+echo "Local:"
+ip -4 -o addr show scope global | awk '
+    $2 != "tailscale0" {
+        split($4, address, "/")
+        printf "  %s\n", address[1]
+    }
+'
+
+echo
+echo "Tailscale:"
+ip -4 -o addr show dev tailscale0 2>/dev/null | awk '
+{
+    split($4, address, "/")
+    printf "  %s\n", address[1]
+}'
+
+echo
+echo "Public:"
+PUBLIC_IP=$(curl -4 -fsS --max-time 3 https://api.ipify.org 2>/dev/null)
+
+if [ -n "$PUBLIC_IP" ]; then
+    echo "  $PUBLIC_IP"
+else
+    echo "  Unavailable"
+fi

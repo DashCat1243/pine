@@ -1,0 +1,33 @@
+#!/bin/bash
+
+SCRIPT_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
+COMMANDS_DIR="$SCRIPT_DIR/commands"
+
+show_commands() {
+    echo "Available commands:"
+
+    for COMMAND in "$COMMANDS_DIR"/*; do
+        [ -f "$COMMAND" ] || continue
+        echo "  $(basename "$COMMAND")"
+    done
+}
+
+if [ $# -eq 0 ]; then
+    echo "Incomplete command."
+    echo
+    show_commands
+    exit 1
+fi
+
+COMMAND="$COMMANDS_DIR/$1"
+shift
+
+if [ -x "$COMMAND" ]; then
+    exec "$COMMAND" "$@"
+else
+    echo "Incorrect command."
+    echo
+    show_commands
+    exit 1
+fi
