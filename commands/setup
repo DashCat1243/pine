@@ -8,11 +8,12 @@ fi
 if [ "$1" = "--help" ]; then
     echo "Usage: pine setup"
     echo
-    echo "Installs Pine's command symlink, makes Pine's scripts executable, and prepares the repository for use on this system."
+    echo "Installs Pine's command symlink, Bash completion, and shell integration, and prepares the repository for use on this system."
     exit 0
 fi
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_PATH="$(readlink -f "$0")"
+SCRIPT_DIR="$(dirname "$SCRIPT_PATH")"
 PINE_DIR="$(dirname "$SCRIPT_DIR")"
 PINE_EXEC="$PINE_DIR/pine"
 
@@ -22,6 +23,12 @@ INSTALL_PATH="$INSTALL_DIR/pine"
 COMPLETIONS_DIR="${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion}/completions"
 COMPLETION_PATH="$COMPLETIONS_DIR/pine"
 COMPLETION_SOURCE="$PINE_DIR/completions/pine"
+
+SHELL_CONFIG_DIR="$HOME/.config/pine"
+SHELL_FUNCTION="$SHELL_CONFIG_DIR/pine.bash"
+SHELL_SOURCE="$PINE_DIR/shell/pine.bash"
+
+BASHRC="$HOME/.bashrc"
 
 echo "Setting up Pine..."
 echo
@@ -38,16 +45,17 @@ chmod +x "$PINE_EXEC"
 echo "Making Pine commands executable..."
 find "$PINE_DIR/commands" -type f -exec chmod +x {} +
 
-echo "Creating ~/.local/bin..."
+echo "Checking Pine command..."
+
 mkdir -p "$INSTALL_DIR"
 
 if [ -L "$INSTALL_PATH" ]; then
     CURRENT_TARGET="$(readlink -f "$INSTALL_PATH")"
 
     if [ "$CURRENT_TARGET" = "$PINE_EXEC" ]; then
-        echo "Pine is already linked."
+        echo "  ✓ Pine command already set up."
     else
-        echo "Updating Pine symlink..."
+        echo "  Updating Pine command..."
         rm "$INSTALL_PATH"
         ln -s "$PINE_EXEC" "$INSTALL_PATH"
     fi
@@ -59,34 +67,80 @@ elif [ -e "$INSTALL_PATH" ]; then
     echo "Refusing to overwrite it."
     exit 1
 else
-    echo "Creating Pine symlink..."
     ln -s "$PINE_EXEC" "$INSTALL_PATH"
+    echo "  ✓ Pine command installed."
 fi
 
-echo "Installing Bash completion..."
+echo
+echo "Checking Bash completion..."
 
 mkdir -p "$COMPLETIONS_DIR"
 
 if [ -L "$COMPLETION_PATH" ]; then
-    rm "$COMPLETION_PATH"
+    CURRENT_TARGET="$(readlink -f "$COMPLETION_PATH")"
+
+    if [ "$CURRENT_TARGET" = "$COMPLETION_SOURCE" ]; then
+        echo "  ✓ Bash completion already installed."
+    else
+        echo "  Updating Bash completion..."
+        rm "$COMPLETION_PATH"
+        ln -s "$COMPLETION_SOURCE" "$COMPLETION_PATH"
+    fi
 elif [ -e "$COMPLETION_PATH" ]; then
+    echo
     echo "A non-symlink already exists at:"
     echo "$COMPLETION_PATH"
     echo
     echo "Refusing to overwrite it."
     exit 1
+else
+    ln -s "$COMPLETION_SOURCE" "$COMPLETION_PATH"
+    echo "  ✓ Bash completion installed."
 fi
 
-ln -s "$COMPLETION_SOURCE" "$COMPLETION_PATH"
+echo
+echo "Checking Bash integration..."
+
+mkdir -p "$SHELL_CONFIG_DIR"
+
+if [ -L "$SHELL_FUNCTION" ]; then
+    CURRENT_TARGET="$(readlink -f "$SHELL_FUNCTION")"
+
+    if [ "$CURRENT_TARGET" = "$SHELL_SOURCE" ]; then
+        echo "  ✓ Bash integration already installed."
+    else
+        echo "  Updating Bash integration..."
+        rm "$SHELL_FUNCTION"
+        ln -s "$SHELL_SOURCE" "$SHELL_FUNCTION"
+    fi
+elif [ -e "$SHELL_FUNCTION" ]; then
+    echo
+    echo "A non-symlink already exists at:"
+    echo "$SHELL_FUNCTION"
+    echo
+    echo "Refusing to overwrite it."
+    exit 1
+else
+    ln -s "$SHELL_SOURCE" "$SHELL_FUNCTION"
+    echo "  ✓ Bash integration installed."
+fi
 
 echo
+echo "Checking ~/.bashrc..."
 
-case ":$PATH:" in
-    *":$INSTALL_DIR:"*)
-        echo "Pine setup complete!"
-        ;;
-    *)
-        echo "Pine was installed, but ~/.local/bin is not in your PATH."
-        echo "Add it to your PATH before using 'pine' from anywhere."
-        ;;
-esac
+SOURCE_LINE='source "$HOME/.config/pine/pine.bash"'
+
+if grep -Fqx "$SOURCE_LINE" "$BASHRC" 2>/dev/null; then
+    echo "  ✓ Bash integration already added to ~/.bashrc."
+else
+    printf '\n%s\n' "$SOURCE_LINE" >> "$BASHRC"
+    echo "  ✓ Bash integration added to ~/.bashrc."
+fi
+
+echo
+echo "Pine setup complete!"
+echo
+echo "Open a new terminal to load the changes."
+echo "Or run:"
+echo
+echo "  source ~/.bashrc"

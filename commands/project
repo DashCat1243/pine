@@ -1,0 +1,123 @@
+#!/bin/bash
+
+if [ "$1" = "--description" ]; then
+    echo "Create a new Git project"
+    exit 0
+fi
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine project <name> [-g]"
+    echo
+    echo "Creates a new project folder in ~/Projects, initialises it as a Git repository, and optionally creates and connects a private GitHub repository with -g."
+    exit 0
+fi
+
+GITHUB=false
+PRINT_DIR=false
+PROJECT_NAME=""
+
+for ARG in "$@"; do
+    case "$ARG" in
+        -g)
+            GITHUB=true
+            ;;
+        --print-dir)
+            PRINT_DIR=true
+            ;;
+        -*)
+            echo "Unknown option: $ARG" >&2
+            echo "Usage: pine project <name> [-g]" >&2
+            exit 1
+            ;;
+        *)
+            if [ -n "$PROJECT_NAME" ]; then
+                echo "Only one project name can be provided." >&2
+                exit 1
+            fi
+            PROJECT_NAME="$ARG"
+            ;;
+    esac
+done
+
+if [ -z "$PROJECT_NAME" ]; then
+    echo "No project name provided." >&2
+    echo "Usage: pine project <name> [-g]" >&2
+    exit 1
+fi
+
+if [[ ! "$PROJECT_NAME" =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo "Invalid project name." >&2
+    echo "Use only letters, numbers, dots, hyphens, and underscores." >&2
+    exit 1
+fi
+
+PROJECTS_DIR="$HOME/Projects"
+PROJECT_DIR="$PROJECTS_DIR/$PROJECT_NAME"
+
+say() {
+    if [ "$PRINT_DIR" = true ]; then
+        echo "$@" >&2
+    else
+        echo "$@"
+    fi
+}
+
+run() {
+    if [ "$PRINT_DIR" = true ]; then
+        "$@" >&2
+    else
+        "$@"
+    fi
+}
+
+if [ -e "$PROJECT_DIR" ]; then
+    say "A project named '$PROJECT_NAME' already exists."
+    exit 1
+fi
+
+if [ "$GITHUB" = true ]; then
+    if ! command -v gh >/dev/null 2>&1; then
+        say "GitHub CLI (gh) is not installed."
+        exit 1
+    fi
+
+    if ! gh auth status >/dev/null 2>&1; then
+        say "GitHub CLI is not authenticated."
+        say "Run 'gh auth login' first."
+        exit 1
+    fi
+fi
+
+mkdir -p "$PROJECTS_DIR"
+mkdir "$PROJECT_DIR"
+
+say "Created $PROJECT_DIR"
+
+run git -C "$PROJECT_DIR" init
+
+say "Initialised Git repository."
+
+if [ "$GITHUB" = true ]; then
+    printf '# %s\n' "$PROJECT_NAME" > "$PROJECT_DIR/README.md"
+
+    run git -C "$PROJECT_DIR" add README.md
+    run git -C "$PROJECT_DIR" commit -m "Initial commit"
+
+    say "Creating GitHub repository..."
+
+    run gh repo create "$PROJECT_NAME" \
+        --private \
+        --source="$PROJECT_DIR" \
+        --remote=origin \
+        --push
+
+    say "GitHub repository created and connected."
+fi
+
+if [ "$PRINT_DIR" = true ]; then
+    printf '%s\n' "$PROJECT_DIR"
+else
+    echo
+    echo "Project ready!"
+    echo "cd $PROJECT_DIR"
+fi

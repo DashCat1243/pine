@@ -24,6 +24,15 @@ show_help() {
     done
 }
 
+show_detailed_help() {
+    for COMMAND in "$COMMANDS_DIR"/*; do
+        [ -f "$COMMAND" ] || continue
+
+        echo
+        "$COMMAND" --help
+    done
+}
+
 if [ $# -eq 0 ]; then
     echo "Incomplete command."
     echo
@@ -33,7 +42,7 @@ fi
 
 if [ "$1" = "help" ]; then
     if [ "$#" -eq 1 ]; then
-        show_help
+        show_detailed_help
         exit 0
     fi
 
