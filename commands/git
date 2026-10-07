@@ -1,0 +1,39 @@
+#!/bin/bash
+
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+echo "Checking for changes..."
+echo
+
+git status --short
+
+if [ -z "$(git status --porcelain)" ]; then
+    echo
+    echo "Nothing to commit."
+    exit 0
+fi
+
+echo
+read -rp "Commit message: " MESSAGE
+
+if [ -z "$MESSAGE" ]; then
+    echo "No commit message entered."
+    exit 1
+fi
+
+echo
+echo "Staging changes..."
+git add -A
+
+echo
+echo "Committing..."
+git commit -m "$MESSAGE"
+
+echo
+echo "Pushing to GitHub..."
+git push
+
+echo
+echo "Done."
