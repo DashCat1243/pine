@@ -5,6 +5,13 @@ if [ "$1" = "--description" ]; then
     exit 0
 fi
 
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine ip"
+    echo
+    echo "Shows the computer's local, Tailscale, and public IP addresses."
+    exit 0
+fi
+
 echo "Network addresses"
 echo
 

@@ -5,6 +5,20 @@ if [ "$1" = "--description" ]; then
     exit 0
 fi
 
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine new"
+    echo
+    echo "Creates a new Pine command script, asks for its short description and detailed help description, adds the required help structure, makes the script executable, and opens it in nvim for editing."
+    exit 0
+fi
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine new <command>"
+    echo
+    echo "Creates a new Pine command, asks for its descriptions, and opens it in nvim."
+    exit 0
+fi
+
 if [ "$#" -ne 1 ]; then
     echo "Usage: pine new <command>"
     exit 1
@@ -25,10 +39,17 @@ if [ -e "$COMMAND_PATH" ]; then
     exit 1
 fi
 
-read -rp "Description: " DESCRIPTION
+read -rp "Short description: " DESCRIPTION
 
 if [ -z "$DESCRIPTION" ]; then
-    echo "A description is required."
+    echo "A short description is required."
+    exit 1
+fi
+
+read -rp "Detailed help description: " HELP_DESCRIPTION
+
+if [ -z "$HELP_DESCRIPTION" ]; then
+    echo "A detailed help description is required."
     exit 1
 fi
 
@@ -37,11 +58,23 @@ DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\"/\\\"}"
 DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\$/\\\$}"
 DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\`/\\\`}"
 
+HELP_DESCRIPTION_ESCAPED="${HELP_DESCRIPTION//\\/\\\\}"
+HELP_DESCRIPTION_ESCAPED="${HELP_DESCRIPTION_ESCAPED//\"/\\\"}"
+HELP_DESCRIPTION_ESCAPED="${HELP_DESCRIPTION_ESCAPED//\$/\\\$}"
+HELP_DESCRIPTION_ESCAPED="${HELP_DESCRIPTION_ESCAPED//\`/\\\`}"
+
 cat > "$COMMAND_PATH" <<EOF
 #!/bin/bash
 
 if [ "\$1" = "--description" ]; then
     echo "$DESCRIPTION_ESCAPED"
+    exit 0
+fi
+
+if [ "\$1" = "--help" ]; then
+    echo "Usage: pine $COMMAND_NAME"
+    echo
+    echo "$HELP_DESCRIPTION_ESCAPED"
     exit 0
 fi
 

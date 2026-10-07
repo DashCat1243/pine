@@ -5,6 +5,13 @@ if [ "$1" = "--description" ]; then
     exit 0
 fi
 
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine backup"
+    echo
+    echo "Mounts the Pineapple backup drive and uses rsync to back up Desktop, Downloads, Documents, Pictures, Videos, Music, and .config while showing transfer progress and backup statistics."
+    exit 0
+fi
+
 set -euo pipefail
 
 BACKUP_UUID="940720d3-869c-496e-b608-37f4e32870e5"

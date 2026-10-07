@@ -32,8 +32,22 @@ if [ $# -eq 0 ]; then
 fi
 
 if [ "$1" = "help" ]; then
-    show_help
-    exit 0
+    if [ "$#" -eq 1 ]; then
+        show_help
+        exit 0
+    fi
+
+    HELP_COMMAND="$COMMANDS_DIR/$2"
+
+    if [ ! -x "$HELP_COMMAND" ]; then
+        echo "Incorrect command."
+        echo
+        show_help
+        exit 1
+    fi
+
+    "$HELP_COMMAND" --help
+    exit $?
 fi
 
 COMMAND="$COMMANDS_DIR/$1"

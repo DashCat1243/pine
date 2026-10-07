@@ -5,4 +5,11 @@ if [ "$1" = "--description" ]; then
     exit 0
 fi
 
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine hello"
+    echo
+    echo "A simple test command used to confirm that Pine can find and execute commands correctly."
+    exit 0
+fi
+
 echo "hello from Pine"
