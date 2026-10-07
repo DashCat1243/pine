@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ "$1" = "--description" ]; then
+    echo "Edit a Pine command"
+    exit 0
+fi
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine edit"
+    echo
+    echo "Opens an existing Pine command in nvim for editing."
+    exit 0
+fi
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: pine edit <command>"
+    exit 1
+fi
+
+COMMAND_NAME="$1"
+COMMANDS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+COMMAND_PATH="$COMMANDS_DIR/$COMMAND_NAME"
+
+if [ ! -f "$COMMAND_PATH" ]; then
+    echo "Command '$COMMAND_NAME' does not exist."
+    exit 1
+fi
+
+nvim "$COMMAND_PATH"
