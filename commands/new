@@ -1,0 +1,56 @@
+#!/bin/bash
+
+if [ "$1" = "--description" ]; then
+    echo "Create a new Pine command"
+    exit 0
+fi
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: pine new <command>"
+    exit 1
+fi
+
+COMMAND_NAME="$1"
+COMMANDS_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+COMMAND_PATH="$COMMANDS_DIR/$COMMAND_NAME"
+
+if [[ ! "$COMMAND_NAME" =~ ^[a-zA-Z0-9_-]+$ ]]; then
+    echo "Invalid command name."
+    echo "Use only letters, numbers, hyphens, and underscores."
+    exit 1
+fi
+
+if [ -e "$COMMAND_PATH" ]; then
+    echo "A command named '$COMMAND_NAME' already exists."
+    exit 1
+fi
+
+read -rp "Description: " DESCRIPTION
+
+if [ -z "$DESCRIPTION" ]; then
+    echo "A description is required."
+    exit 1
+fi
+
+DESCRIPTION_ESCAPED="${DESCRIPTION//\\/\\\\}"
+DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\"/\\\"}"
+DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\$/\\\$}"
+DESCRIPTION_ESCAPED="${DESCRIPTION_ESCAPED//\`/\\\`}"
+
+cat > "$COMMAND_PATH" <<EOF
+#!/bin/bash
+
+if [ "\$1" = "--description" ]; then
+    echo "$DESCRIPTION_ESCAPED"
+    exit 0
+fi
+
+# Your code here
+EOF
+
+chmod +x "$COMMAND_PATH"
+
+echo "Created command '$COMMAND_NAME'."
+echo "Opening it in nvim..."
+
+nvim "$COMMAND_PATH"
