@@ -1,0 +1,72 @@
+#!/bin/bash
+
+if [ "$1" = "--description" ]; then
+    echo "Set up Pine on this system"
+    exit 0
+fi
+
+if [ "$1" = "--help" ]; then
+    echo "Usage: pine setup"
+    echo
+    echo "Installs Pine's command symlink, makes Pine's scripts executable, and prepares the repository for use on this system."
+    exit 0
+fi
+
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+PINE_DIR="$(dirname "$SCRIPT_DIR")"
+PINE_EXEC="$PINE_DIR/pine"
+
+INSTALL_DIR="$HOME/.local/bin"
+INSTALL_PATH="$INSTALL_DIR/pine"
+
+echo "Setting up Pine..."
+echo
+
+if [ ! -f "$PINE_EXEC" ]; then
+    echo "Could not find Pine at:"
+    echo "$PINE_EXEC"
+    exit 1
+fi
+
+echo "Making Pine executable..."
+chmod +x "$PINE_EXEC"
+
+echo "Making Pine commands executable..."
+find "$PINE_DIR/commands" -type f -exec chmod +x {} +
+
+echo "Creating ~/.local/bin..."
+mkdir -p "$INSTALL_DIR"
+
+if [ -L "$INSTALL_PATH" ]; then
+    CURRENT_TARGET="$(readlink -f "$INSTALL_PATH")"
+
+    if [ "$CURRENT_TARGET" = "$PINE_EXEC" ]; then
+        echo "Pine is already linked."
+    else
+        echo "Updating Pine symlink..."
+        rm "$INSTALL_PATH"
+        ln -s "$PINE_EXEC" "$INSTALL_PATH"
+    fi
+elif [ -e "$INSTALL_PATH" ]; then
+    echo
+    echo "A non-symlink already exists at:"
+    echo "$INSTALL_PATH"
+    echo
+    echo "Refusing to overwrite it."
+    exit 1
+else
+    echo "Creating Pine symlink..."
+    ln -s "$PINE_EXEC" "$INSTALL_PATH"
+fi
+
+echo
+
+case ":$PATH:" in
+    *":$INSTALL_DIR:"*)
+        echo "Pine setup complete!"
+        ;;
+    *)
+        echo "Pine was installed, but ~/.local/bin is not in your PATH."
+        echo "Add it to your PATH before using 'pine' from anywhere."
+        ;;
+esac
