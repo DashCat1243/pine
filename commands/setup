@@ -19,6 +19,10 @@ PINE_EXEC="$PINE_DIR/pine"
 INSTALL_DIR="$HOME/.local/bin"
 INSTALL_PATH="$INSTALL_DIR/pine"
 
+COMPLETIONS_DIR="${BASH_COMPLETION_USER_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/bash-completion}/completions"
+COMPLETION_PATH="$COMPLETIONS_DIR/pine"
+COMPLETION_SOURCE="$PINE_DIR/completions/pine"
+
 echo "Setting up Pine..."
 echo
 
@@ -58,6 +62,22 @@ else
     echo "Creating Pine symlink..."
     ln -s "$PINE_EXEC" "$INSTALL_PATH"
 fi
+
+echo "Installing Bash completion..."
+
+mkdir -p "$COMPLETIONS_DIR"
+
+if [ -L "$COMPLETION_PATH" ]; then
+    rm "$COMPLETION_PATH"
+elif [ -e "$COMPLETION_PATH" ]; then
+    echo "A non-symlink already exists at:"
+    echo "$COMPLETION_PATH"
+    echo
+    echo "Refusing to overwrite it."
+    exit 1
+fi
+
+ln -s "$COMPLETION_SOURCE" "$COMPLETION_PATH"
 
 echo
 
